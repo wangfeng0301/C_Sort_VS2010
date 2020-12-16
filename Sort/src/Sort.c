@@ -21,7 +21,7 @@ void swap_int(int *dat1,int *dat2)
 	*dat2 = temp;
 }
 /******************************
- *冒泡排序法：时间复杂度：n^2
+ *冒泡排序法：时间复杂度：n^2,稳定
  *输入：mode 0:升序；1：降序
  *		dat  要排序的数据
  *		len  数据的长度
@@ -32,24 +32,24 @@ void Sort_Bubbling(UINT8 mode,int *dat,UINT16 len)
 	UINT16 i,j;
 	for(i = 0;i<len-1;i++)
 	{
-		for(j = i;j<len;j++)
+		for(j = 0;j<len-1-i;j++)
 		{
 			if(mode)
 			{
-				if(dat[i]<dat[j])//降序
-					swap_int(&dat[i],&dat[j]);
+				if(dat[j]<dat[j+1])//降序，注意这里一定是小于，不能是小于等于，否则排序不稳定
+					swap_int(&dat[j],&dat[j+1]);
 			}
 			else
 			{
-				if(dat[i]>dat[j])
-					swap_int(&dat[i],&dat[j]);
+				if(dat[j]>dat[j+1])//升序，注意这里一定是大于，不能是大于等于，否则排序不稳定
+					swap_int(&dat[j],&dat[j+1]);
 			}
 		}
 	}
 }
 
 /******************************
- *快速排序法:时间复杂度：nlogn
+ *快速排序法:时间复杂度：nlogn，不稳定
  *输入：dat  要排序的数据
  *		start 数据开始下标
  *		end  数据结束下标
