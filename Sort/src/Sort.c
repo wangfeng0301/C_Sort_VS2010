@@ -221,6 +221,7 @@ void Sort_Heat(int *arr,int len)
 	}
 }
 
+/*****************************************************************************************************************/
 /******************************
  *二路归并
  *输入：arr:输入的数据；
@@ -237,7 +238,7 @@ static void MergeData(int *arr,int left,int mid,int right,int *temp)
 	int i = 0;
 	while(index1<=mid && index2<=right)
 	{
-		if(arr[index1] < arr[index2])
+		if(arr[index1] <= arr[index2])//为保证稳定性，相等时优先选左边的
 			temp[i++] = arr[index1++];
 		else
 			temp[i++] = arr[index2++];
@@ -256,7 +257,7 @@ static void MergeData(int *arr,int left,int mid,int right,int *temp)
  *输出：temp:归并后的数据
  *返回：无
  *****************************/
-static _MergeSort(int *arr,int left,int right,int *temp)
+static void _MergeSort(int *arr,int left,int right,int *temp)
 {
 	int mid;
 	if((right - left) <= 0)//退出递归的条件
@@ -270,6 +271,7 @@ static _MergeSort(int *arr,int left,int right,int *temp)
 /******************************
  *归并排序：将待排序的元素序列分为两个长度相等的子序列,对每个子序列进行排序,然后将他们合并成一个序列,合并两个子序列的过程称为二路归并.
  *时间复杂度：nlogn
+ *稳定性：稳定
  *输入：arr:输入的数据；
  *		size:排序数据大小
  *输出：arr:排序完的数据
@@ -284,6 +286,47 @@ void Sort_Merge(int *arr,int size)
 		return;
 	}
 	_MergeSort(arr,0,size-1,temp);
+	free(temp);
+	temp = NULL;
+}
+/******************************
+ *归并排序：非递归方式
+ *时间复杂度：nlogn
+ *稳定性：稳定
+ *输入：arr:输入的数据；
+ *		size:排序数据大小
+ *输出：arr:排序完的数据
+ *返回：无
+ *****************************/
+void Sort_Merge_Nor(int *arr,int size)
+{
+	int gap,i;
+	int left,right,mid;
+	int *temp = (int *)malloc(sizeof(arr[0])*size);
+	if(NULL == temp)
+	{
+		printf("申请内存失败\r\n");
+		return;
+	}
+	gap = 1;
+	while(gap < size)
+	{
+		for(i = 0;i<size;i += 2*gap)
+		{
+			left = i;
+			mid = left + gap -1;
+			right = mid + gap;
+			//if(mid >= size)//确保所有数据都能分组
+			//	mid = size - 1;
+			if(mid >= size-1)//中间数大于最大下标，说明到了最后一组，最后一组已经排好序了，所以直接退出循环
+				break;
+			if(right >= size)//确保所有数据都能分组
+				right = size-1;
+			MergeData(arr,left,mid,right,temp+i);
+		}
+		memcpy((UINT8*)arr,(UINT8*)temp,sizeof(arr[0])*size);
+		gap *= 2;
+	}
 	free(temp);
 	temp = NULL;
 }

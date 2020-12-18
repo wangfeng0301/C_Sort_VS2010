@@ -62,6 +62,10 @@ int main()
 	Sort_Merge(decdat,sizeof(decdat)/4);
 	display(decdat,sizeof(testdat)/4);
 
+	printf("πÈ≤¢≈≈–Ú(∑«µ›πÈ)    £∫");
+	memcpy(decdat,testdat,sizeof(testdat));
+	Sort_Merge_Nor(decdat,sizeof(decdat)/4);
+	display(decdat,sizeof(testdat)/4);
 
 	system("pause");
 	return 0;

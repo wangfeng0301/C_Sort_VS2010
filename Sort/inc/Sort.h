@@ -11,5 +11,6 @@ void Sort_Shell(int *dat,UINT8 len);
 void Sort_Select(int* dat,UINT8 len);
 void Sort_Heat(int *arr,int len);
 void Sort_Merge(int *arr,int size);
+void Sort_Merge_Nor(int *arr,int size);
 
 #endif
