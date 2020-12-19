@@ -5,6 +5,7 @@
 **********************************************************************/
 #include "Sort.h"
 #include "malloc.h"
+#include "string.h"
 
 void swap_u8(UINT8 *dat1,UINT8 *dat2)
 {
@@ -27,7 +28,7 @@ void swap_int(int *dat1,int *dat2)
  *		len  数据的长度
  *返回：无
  *****************************/
-void Sort_Bubbling(UINT8 mode,int *dat,UINT16 len)
+void Sort_Bubbling(UINT8 mode,int *dat,int len)
 {
 	UINT16 i,j;
 	for(i = 0;i<len-1;i++)
@@ -55,7 +56,7 @@ void Sort_Bubbling(UINT8 mode,int *dat,UINT16 len)
  *		end  数据结束下标
  *返回：无
  *****************************/
-void Sort_Quick(int *dat,UINT8 start,UINT8 end)
+void Sort_Quick(int *dat,int start,int end)
 {
 	UINT8 mid = dat[start];//取第一个数作为基准数
 	UINT8 low,high;
@@ -89,18 +90,23 @@ void Sort_Quick(int *dat,UINT8 start,UINT8 end)
 
 /******************************
  *直接插入排序法：时间复杂度：n^2
+ *稳定性：稳定
+ *思想：1.选中1个要比较的值；
+ *		2.以该值为最右，从右向左比较，如果左边值大，左值向右移，空出位置
+ *		3.直到找到比该值小的数，或找到最左，结束
+ *		4.选下一个要比较的值，重复2-3步，直到整个序列结束
  *输入：dat  要排序的数据
  *		len 数据长度
  *返回：无
  *****************************/
-void Sort_Insert(int *dat,UINT8 len)
+void Sort_Insert(int *dat,int len)
 {
 	int i,key,end;
 	for(i = 1;i<len;i++)
 	{
 		key = dat[i];//保存每次要比较的值
 		end = i-1;
-		while(end >= 0 && key<dat[end])//向前比较，直到找到比自己小的，插入
+		while(end >= 0 && key<dat[end])//向前比较，直到找到比自己小的，插入。一定是key<dat[end]，不能小于等于，否则不稳定。
 		{
 			dat[end+1] = dat[end];//插入的方法为：将前一个值赋值到后一个值，最后将key值赋值到当前。完成插入
 			end--;
@@ -112,15 +118,19 @@ void Sort_Insert(int *dat,UINT8 len)
 
 /******************************
  *希尔排序法（直接插入排序法的优化）:时间复杂度：n^2
+ *稳定性：不稳定
+ *思想：1.分组
+ *		2.对分组进行插入排序
+ *		3.减小分组间距，减小序列个数
  *输入：dat  要排序的数据
  *		len 数据长度
  *返回：无
  *****************************/
-void Sort_Shell(int *dat,UINT8 len)
+void Sort_Shell(int *dat,int len)
 {
 	int gap = len/2;
 	int key,end,i=0;
-	for(gap;gap>0;gap/=2)
+	for(gap;gap>0;gap/=2)//增量也可以取其他值
 	{
 		for(i = gap;i<len;i++)
 		{
@@ -138,11 +148,13 @@ void Sort_Shell(int *dat,UINT8 len)
 
 /******************************
  *直接选择排序：时间复杂度：n^2
+ *思想：1.找出第i小的值，放到第i个位置
+ *稳定性：不稳定
  *输入：dat  要排序的数据
  *		len 数据长度
  *返回：无
  *****************************/
-void Sort_Select(int* dat,UINT8 len)
+void Sort_Select(int* dat,int len)
 {
 	int i;
 	UINT8 minIndex,maxIndex;
@@ -198,6 +210,10 @@ static void HeapAdjust(int *arr,int size,int parent)
 }
 /******************************
  *堆排序：时间复杂度：nlogn
+ *思想：1.对所有数据建立最大堆
+ *		2.取出堆顶最大值与末端交换
+ *		3.调整为最大堆，重复2-3
+ *稳定性：不稳定
  *输入：arr:输入的数据；
  *		len:输入数据的数量；
  *输出：arr：重新排列的数据
@@ -213,10 +229,10 @@ void Sort_Heat(int *arr,int len)
 	for(;root >= 0;root --)
 		HeapAdjust(arr,len,root);
 	
-	/* 调整：此时数组已经是大顶堆，交换对顶和最后一个元素，重新调整为大顶堆 */
+	/* 调整：此时数组已经是大顶堆，交换堆顶和最后一个元素，重新调整为大顶堆 */
 	while(end > 0)
 	{
-		swap_int(&arr[0],&arr[end]);//arr[0]为对顶，arr[end]为最后一个元素
+		swap_int(&arr[0],&arr[end]);//arr[0]为堆顶，arr[end]为最后一个元素
 		HeapAdjust(arr,end--,0);//重新调整为大顶堆
 	}
 }
@@ -269,7 +285,8 @@ static void _MergeSort(int *arr,int left,int right,int *temp)
 	memcpy(arr + left,temp,sizeof(arr[0])*(right - left + 1));
 }
 /******************************
- *归并排序：将待排序的元素序列分为两个长度相等的子序列,对每个子序列进行排序,然后将他们合并成一个序列,合并两个子序列的过程称为二路归并.
+ *归并排序：将待排序的元素序列分为两个长度相等的子序列,对每个子序列进行排序,
+ *			然后将他们合并成一个序列,合并两个子序列的过程称为二路归并.
  *时间复杂度：nlogn
  *稳定性：稳定
  *输入：arr:输入的数据；
@@ -329,4 +346,47 @@ void Sort_Merge_Nor(int *arr,int size)
 	}
 	free(temp);
 	temp = NULL;
+}
+
+/*****************************************************************************************************************/
+/******************************
+ *桶式排序:需要事先直到排序数组中的最大值
+ *时间复杂度：m+n
+ *稳定性：稳定
+ *输入：arr:输入的数据；
+ *		size:排序数据大小
+ *		max:待排序数组中的最大值
+ *输出：arr:排序完的数据
+ *返回：无
+ *****************************/
+void Sort_Bucket(int *arr,int size,int max)
+{
+	int *temp,*count;
+	int i;
+
+	temp = (int *)malloc(sizeof(arr[0])*size);
+	if(temp == NULL)
+	{
+		printf("申请内存失败\r\n");
+		return;
+	}
+	count = (int *)malloc(sizeof(int)*max);
+	if(count == NULL)
+	{
+		free(temp);
+		temp = NULL;
+		printf("申请内存失败\r\n");
+		return;
+	}
+
+	for(i = 0;i<size;i++)//带排序数组赋值到临时变量
+		temp[i] = arr[i];
+	for(i = 0;i<max;i++)//计数器清零
+		count[i] = 0;
+	for(i = 0;i<size;i++)//统计每个数字出现的次数
+		count[temp[i]] ++;
+	for(i = 1;i<max;i++)//count[i]记录了i+1的起始位置
+		count[i] = count[i - 1] + count[i];
+	for(i = size - 1;i >= 0;i--)//从尾部开始顺序输出，保证排序的稳定性
+		arr[--count[temp[i]]] = temp[i];
 }

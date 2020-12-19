@@ -67,6 +67,11 @@ int main()
 	Sort_Merge_Nor(decdat,sizeof(decdat)/4);
 	display(decdat,sizeof(testdat)/4);
 
+	printf("Õ∞ Ω≈≈–Ú            £∫");
+	memcpy(decdat,testdat,sizeof(testdat));
+	Sort_Bucket(decdat,sizeof(decdat)/4,90);
+	display(decdat,sizeof(testdat)/4);
+
 	system("pause");
 	return 0;
 }
