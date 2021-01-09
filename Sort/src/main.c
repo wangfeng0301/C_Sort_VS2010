@@ -20,7 +20,7 @@ int main()
 
 	printf("This is a sort test.\r\n");
 	printf("原始序列：");
-	display(testdat,20);
+	display(testdat,sizeof(decdat)/sizeof(testdat[0]));
 	
 	printf("冒泡排序法(升序)    ：");
 	memcpy(decdat,testdat,sizeof(testdat));
@@ -72,12 +72,20 @@ int main()
 	Sort_Bucket(decdat,sizeof(decdat)/4,90);
 	display(decdat,sizeof(testdat)/4);
 
-	printf("基数排序            ：");
+	printf("基数排序_顺序       ：");
 	memcpy(decdat,testdat,sizeof(testdat));
 	Sort_Radix_InTurn(decdat,sizeof(decdat)/4,2,10);
 	display(decdat,sizeof(testdat)/4);
 
+	printf("基数排序_静态链     ：");
+	memcpy(decdat,testdat,sizeof(testdat));
+	Sort_Radix_Link(decdat,sizeof(decdat)/4,2,10);
+	display(decdat,sizeof(testdat)/4);
 
+	printf("索引排序            ：");
+	memcpy(decdat,testdat,sizeof(testdat));
+	Sort_Index_Insert(decdat,sizeof(decdat)/sizeof(decdat[0]));
+	display(decdat,sizeof(testdat)/sizeof(decdat[0]));
 
 	system("pause");
 	return 0;

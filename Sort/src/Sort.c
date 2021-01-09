@@ -333,10 +333,8 @@ void Sort_Merge_Nor(int *arr,int size)
 			left = i;
 			mid = left + gap -1;
 			right = mid + gap;
-			//if(mid >= size)//确保所有数据都能分组
-			//	mid = size - 1;
-			if(mid >= size-1)//中间数大于最大下标，说明到了最后一组，最后一组已经排好序了，所以直接退出循环
-				break;
+			if(mid >= size)//确保所有数据都能分组
+				mid = size - 1;
 			if(right >= size)//确保所有数据都能分组
 				right = size-1;
 			MergeData(arr,left,mid,right,temp+i);
@@ -450,4 +448,216 @@ void Sort_Radix_InTurn(int *arr,int n,int d,int r)
 	}
 	free(temp);
 	free(count);
+}
+
+/******************************
+ *基数排序-静态链:桶式排序的扩展
+ *时间复杂度：d*(n+r)
+ *稳定性：稳定
+ *输入：arr:输入的数据；
+ *		n:排序数据的个数
+ *		d:排序码个数，即按照几个排序，如两位正整数d=2，3位正整数d=3
+ *		r:基数，如10进制数，基数取10
+ *输出：arr:排序完的数据
+ *返回：无
+ *注：排序码就是按照这个码来排序的元素。如3位十进制数，排序码是0-9。
+ *****************************/
+typedef struct{
+	int key;//排序码值
+	int next;//下一个节点在数组中的下标
+}Node_t;
+typedef struct{
+	int head;
+	int tail;
+}StatiQueue_t;
+static void distribute(Node_t *arr,int first,int i,int r,StatiQueue_t *queue);
+static void collect(Node_t *arr,int *first,int r,StatiQueue_t *queue);
+static void addr_sort(Node_t *arr,int n,int first,int *temp);
+void Sort_Radix_Link(int *arr,int n,int d,int r)
+{
+	int i;
+	int first = 0;//first指向静态链中的第一个数据，故默认下标=0
+	Node_t *temp;
+	StatiQueue_t *queue;
+
+	temp = (Node_t *)malloc(sizeof(Node_t)*n);//辅助排序临时数组
+	if(temp == NULL)
+	{
+		printf("申请内存失败\r\n");
+		return;
+	}
+	
+	queue = (StatiQueue_t *)malloc(sizeof(StatiQueue_t)*r);//存放r个桶的静态队列
+	if(queue == NULL)
+	{
+		free(temp);
+		temp = NULL;
+		printf("申请内存失败\r\n");
+		return;
+	}
+	/* 数据复制到临时数组中，方便使用队列排序 */
+	/* 如果函数传入的数据本身就是Node_t格式的，则不用临时数组 */
+	for(i = 0;i < n;i++)
+		temp[i].key = arr[i];
+	/* 初始化建链，相邻数据的静态指针连接为单链表 */
+	for(i = 0;i < n-1;i++)
+		temp[i].next = i+1;
+	temp[n-1].next = -1;//链尾next为空
+
+	/* 对第i个排序码进行分配和收集，共d轮 */
+	for(i = 0;i < d;i++)
+	{
+		distribute(temp, first, i, r, queue);
+		collect(temp, &first, r, queue);
+	}
+	addr_sort(temp, n, first, arr);
+	free(temp);
+	free(queue);
+}
+/******************************
+ *分配过程
+ *输入：arr:输入的数据；
+ *		first:静态链中第一个数据的下标
+ *		i:第i个排序码
+ *		r:基数，如10进制数，基数取10
+ *		queue:队列，作为桶的计数器
+ *输出：arr:排序完的数据
+ *返回：无
+ *注：排序码就是按照这个码来排序的元素。如3位十进制数，排序码是0-9。
+ *****************************/
+static void distribute(Node_t *arr,int first,int i,int r,StatiQueue_t *queue)
+{
+	int j,k,a;
+	int curr = first;//当前要排序数据的下标
+	/* 初始化r个队列 */
+	for(j = 0;j < r;j++)
+		queue[j].head = -1;
+
+	/* 对整个静态链进行分配，沿着链寻找 */
+	while(curr != -1)
+	{
+		k = arr[curr].key;//取数据
+		for(a = 0;a < i;a++)//取第i位排序码k
+			k = k/r;
+		k = k%r;
+
+		/* 把arr[curr]分配到第k个桶中 */
+		if(queue[k].head == -1)//若桶为空，arr[curr]就是桶中第一个数据
+			queue[k].head = curr;
+		else//否则加到桶的尾部
+			arr[queue[k].tail].next = curr;
+		queue[k].tail = curr;//当前待排序数据的下标标记为桶的尾部
+		curr = arr[curr].next;//静态指针移动，指向下一个带排序的数据，继续分配
+	}
+}
+/******************************
+ *收集过程
+ *输入：arr:输入的数据
+ *		r:基数，如10进制数，基数取10
+ *		queue:队列，作为桶的计数器
+ *输出：arr:排序完的数据
+ *		first:静态链中第一个数据的下标，这里作为返回值，供distribute调用
+ *返回：无
+ *注：排序码就是按照这个码来排序的元素。如3位十进制数，排序码是0-9。
+ *****************************/
+static void collect(Node_t *arr,int *first,int r,StatiQueue_t *queue)
+{
+	int k = 0,last;
+	/* 找到第一个非空队列 */
+	while(queue[k].head == -1)
+		k++;
+
+	*first = queue[k].head;//记录待排序链中的第一个下标
+	last = queue[k].tail;//记录当前队列中待排序链的最后一个下标
+
+	/* 每个桶依次收集 */
+	/* 经过分配后，待排序的数据已经按照排序码分成一个一个的单向链 */
+	/* 所以收集只是通过队列将各个单向链连接起来 */
+	while(k < r-1)
+	{
+		k++;
+		while(k < r-1 && queue[k].head == -1)
+			k++;
+		if(queue[k].head != -1)
+		{
+			arr[last].next = queue[k].head;//收尾相连
+			last = queue[k].tail;//记录最后一个下标
+		}
+	}
+	arr[last].next = -1;//收集完毕，排好序数据的最后一个指向空
+}
+/******************************
+ *线性整理过程
+ *输入：arr:输入的数据
+ *		n:待排序数据的数量
+ *		first:静态链中第一个数据的下标
+ *输出：temp:排序完的数据
+ *返回：无
+ *****************************/
+static void addr_sort(Node_t *arr,int n,int first,int *temp)
+{
+	int i,j;
+	j = first;
+	for(i = 0;i < n;i++)
+	{
+		temp[i] = arr[j].key;
+		j = arr[j].next;
+	}
+}
+
+/******************************
+ *索引排序:简单插入的索引排序。IndexArr[i]表示arr第i个位置应该放arr[IndexArr[i]]
+ *时间复杂度：
+ *稳定性：稳定
+ *输入：arr:待排序的数据
+ *		size:待排序数据的个数
+ *输出：arr:排序完的数据
+ *返回：无
+ *****************************/
+void Sort_Index_Insert(int *arr, int size)
+{
+	int i,j,k;
+	int *IndexArr;
+	int temp;//临时存储空间
+
+	IndexArr = (int *)malloc(sizeof(arr[0])*size);
+	if(NULL == IndexArr)
+	{
+		printf("申请内存失败\r\n");
+		return;
+	}
+	/* 初始化索引下标 */
+	for(i = 0;i < size;i++)
+		IndexArr[i] = i;
+
+	/* 简单插入排序的地址排序过程 */
+	for(i = 0;i < size;i++)
+	{
+		for(j = i;j > 0;j--)
+		{
+			/* 对索引进行调整，后期再整理 */
+			if(arr[IndexArr[j]] < arr[IndexArr[j-1]])
+				swap_int(&IndexArr[j],&IndexArr[j-1]);
+			else
+				break;
+		}
+	}
+	
+	/* 调整 */
+	for(i = 0;i < size;i++)
+	{
+		temp = arr[i];
+		j = i;
+		/* 如果循环链中索引下表不是i，则顺链进行调整 */
+		/* IndexArr[i]表示arr第i个位置应该放arr[IndexArr[i]] */
+		while(IndexArr[j] != i)
+		{
+			k = IndexArr[j];//k是链接j指向的下标
+			arr[j] = arr[k];//把k下标中的值复制到j位，第j大元素正确归位
+			IndexArr[j] = j;//已经正确归位，故j就是自身
+			j = k;
+		}
+		arr[j] = temp;
+		IndexArr[j] = j;//已经正确归位，故j就是自身
+	}
 }
