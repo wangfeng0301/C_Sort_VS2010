@@ -13,5 +13,6 @@ void Sort_Heat(int *arr,int len);
 void Sort_Merge(int *arr,int size);
 void Sort_Merge_Nor(int *arr,int size);
 void Sort_Bucket(int *arr,int size,int max);
+void Sort_Radix_InTurn(int *arr,int n,int d,int r);
 
 #endif

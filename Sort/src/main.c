@@ -72,6 +72,13 @@ int main()
 	Sort_Bucket(decdat,sizeof(decdat)/4,90);
 	display(decdat,sizeof(testdat)/4);
 
+	printf("»ùÊıÅÅĞò            £º");
+	memcpy(decdat,testdat,sizeof(testdat));
+	Sort_Radix_InTurn(decdat,sizeof(decdat)/4,2,10);
+	display(decdat,sizeof(testdat)/4);
+
+
+
 	system("pause");
 	return 0;
 }

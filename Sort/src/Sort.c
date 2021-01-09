@@ -1,6 +1,6 @@
 /*********************************************************************
 *wangfeng
-*2020.10.19-2020.12.4
+*2020.10.19-2021.1.9
 *参考资料：https://blog.csdn.net/sx2448826571/article/details/80487531
 **********************************************************************/
 #include "Sort.h"
@@ -389,4 +389,65 @@ void Sort_Bucket(int *arr,int size,int max)
 		count[i] = count[i - 1] + count[i];
 	for(i = size - 1;i >= 0;i--)//从尾部开始顺序输出，保证排序的稳定性
 		arr[--count[temp[i]]] = temp[i];
+
+	free(temp);
+	free(count);
+}
+
+/******************************
+ *基数排序-顺序存储:桶式排序的扩展
+ *时间复杂度：d*(n+r)
+ *稳定性：稳定
+ *输入：arr:输入的数据；
+ *		n:排序数据的个数
+ *		d:排序码个数，即按照几个排序，如两位正整数d=2，3位正整数d=3
+ *		r:基数，如10进制数，基数取10
+ *输出：arr:排序完的数据
+ *返回：无
+ *注：排序码就是按照这个码来排序的元素。如3位十进制数，排序码是0-9。
+ *****************************/
+void Sort_Radix_InTurn(int *arr,int n,int d,int r)
+{
+	int *temp,*count;
+	int i,j,k;
+	int Radix = 1;//模
+
+	temp = (int *)malloc(sizeof(arr[0])*n);//辅助排序临时数组
+	if(temp == NULL)
+	{
+		printf("申请内存失败\r\n");
+		return;
+	}
+	count = (int *)malloc(sizeof(int)*r);//桶容量计数器，count[i]存储第i个桶中的数据个数
+	if(count == NULL)
+	{
+		free(temp);
+		temp = NULL;
+		printf("申请内存失败\r\n");
+		return;
+	}
+
+	for(i = 1;i <= d;i++)//使用d次桶式排序
+	{
+		for(j = 0;j < r;j++)//计数器清零
+			count[j] = 0;
+		for(j = 0;j<n;j++)//统计每个排序码出现的次数
+		{
+			k = (arr[j]/Radix)%r;//取arr[j]的第i位排序码，如3位数就是个位十位百位
+			count[k] ++;
+		}
+		for(j = 1;j < r;j++)//分配给r个桶
+			count[j] = count[j - 1] + count[j];//count[j]记录了j+1的起始位置
+		for(j = n - 1;j >= 0;j--)//从尾部开始顺序收集，保证排序的稳定性
+		{
+			k = (arr[j]/Radix)%r;
+			count[k]--;//使用了第k个桶的一个位置，桶剩余量的计数器减1
+			temp[count[k]] = arr[j];
+		}
+		for(j = 0;j < n;j++)//排序后的数组复制到arr中，以便下一轮排序
+			arr[j] = temp[j];
+		Radix *= r;//修改模Radix			
+	}
+	free(temp);
+	free(count);
 }
